@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'eclipse'
 
+
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 
@@ -23,6 +24,19 @@ dependencies {
     implementation 'com.github.hypfvieh:dbus-java:3.2.4'
     implementation 'org.slf4j:slf4j-simple:1.7.30'
 }
+
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "gradle.plugin.org.mikeneck:graalvm-native-image-plugin:1.1.0"
+  }
+}
+
+apply plugin: 'org.mikeneck.graalvm-native-image'
 
 jar {
     manifest {
@@ -73,4 +87,20 @@ task checkLibVersions {
             }
         }
     }
+}
+
+nativeImage {
+  graalVmHome = '/home/bernhard/Downloads/graalvm-ce-java11-20.3.0'  //System.getProperty('java.home')
+  mainClass = project.mainClassName
+  executableName = 'my-native-application'
+  outputDirectory = file("$buildDir/bin")
+  arguments {
+    add '--no-fallback'
+    add '--enable-all-security-services'
+    add options.traceClassInitialization('com.example.MyDataProvider,com.example.MyDataConsumer')
+    add '--initialize-at-run-time=com.example.runtime'
+    add '--report-unsupported-elements-at-runtime'
+	add '--allow-incomplete-classpath'
+	add '-H:IncludeResourceBundles=net.sourceforge.argparse4j.internal.ArgumentParserImpl'
+  }
 }
